@@ -1,25 +1,27 @@
-#ifndef CONTAINER_H__
-#define CONTAINER_H__
+#ifndef CONTAINER_H_
+#define CONTAINER_H_
 
 
 /*c++0x 提供share_ptr功能 */
 #include "cmemory.h"
 #include "common.h"
 #include "math_functions.h"
+#include <boost/shared_ptr.hpp>	
+
+
 template<typename T>
 class Container{
 public:
-	Container(size_t num_, size_t h_, size_t w_): num(num_), h(h_), w(w_), size(num_*h_*w_){
-		// TODO:: check bound
-		memory_ptr(new Cmemory(size));
+	Container(){
 	}
-
+	Container(size_t num_, size_t h_, size_t w_);
+	
 	// no need to write delete function
 
 	const T* cpu_data() const;
 	const T* gpu_data() const;
-	T* mutable cpu_data();
-	T* mutable gpu_data();
+	T* mutable_cpu_data();
+	T* mutable_gpu_data();
 
 	size_t offset(size_t num_, size_t h_, size_t w_){
 		// TODO: check bound 
@@ -30,10 +32,10 @@ public:
 
 	/* inline function */
 	size_t size(){
-		return size;
+		return size_;
 	}
 	size_t num(){
-		return num;
+		return num_;
 	}
 	size_t height(){
 		return h;
@@ -42,17 +44,17 @@ public:
 		return w;
 	}
 
-	const shared_ptr<Cmemory>& memory_ptr(){
+	inline const shared_ptr<Cmemory>& data() const{
 		return memory_ptr;
 	}
 
 	void share_data(const Container& other);
 
 private:
-	size_t num;
+	size_t num_;
 	size_t h;
 	size_t w;
-	size_t size;
+	size_t size_;
 	
 	//指向Cmemory的智能指针
 	shared_ptr<Cmemory> memory_ptr;

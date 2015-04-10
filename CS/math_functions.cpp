@@ -2,6 +2,8 @@
 #include "common.h"
 #include <boost/random.hpp>
 #include <limits>
+#include <iostream>
+
 template<>
 void c_cpu_gemm<float>(const CBLAS_TRANSPOSE TransA,
     const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
@@ -39,11 +41,11 @@ void c_cpu_gemv<double>(const CBLAS_TRANSPOSE TransA, const int M,
 }
 
 template <>
-void c__cpu_axpy<float>(const int N, const float alpha, const float* X,
+void c_cpu_axpy<float>(const int N, const float alpha, const float* X,
     float* Y) { cblas_saxpy(N, alpha, X, 1, Y, 1); }
 
 template <>
-void c__cpu_axpy<double>(const int N, const double alpha, const double* X,
+void c_cpu_axpy<double>(const int N, const double alpha, const double* X,
     double* Y) { cblas_daxpy(N, alpha, X, 1, Y, 1); }
 
 
@@ -52,11 +54,12 @@ template <typename T>
 void c_rng_gaussian(const int n, const T u, const T sigma, T* r){
     boost::normal_distribution<T> random_distribution(u, sigma);
     boost::variate_generator<boost::mt19937&, boost::normal_distribution<T> >
-      variate_generator(C_singleton::rng(), random_distribution);
+      variate_generator(Csingleton::rng(), random_distribution);
     for (int i = 0; i < n; ++i) {
       r[i] = variate_generator();
   }
 }
+
 
 template
 void c_rng_gaussian<float>(const int n, const float u,
@@ -65,4 +68,12 @@ void c_rng_gaussian<float>(const int n, const float u,
 template
 void c_rng_gaussian<double>(const int n, const double u,
                                 const double sigma, double* r);
+                                
+// uninitialzied                                
+template <typename T>
+void c_copy(const int N, const T* X, T* Y){
+	if(X != Y){
+		cudaMemcpy(Y,X,sizeof(T)*N,cudaMemcpyDefault);
+	}
+}
 

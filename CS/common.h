@@ -5,22 +5,43 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 #include <boost/shared_ptr.hpp>
-#include <boost/random.hpp>
-
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_int.hpp>
+#include <fstream>
+#include <iostream>
+#include <utility>
+#include <stdlib.h>
+#include <unistd.h>
+#include <memory>
 #include <cublas_v2.h>
-#include <cuda.h>
+#include <cuda.h>	
 #include <cuda_runtime.h>
 #include <curand.h>
 #include <driver_types.h>  // cuda driver types
+//using namespace std;
+typedef boost::mt19937 mt19937;
+using boost::shared_ptr;
+
+
+
+/*
+int64_t my_seed(){
+  pid_t pid = getpid();
+  size_t s = time(NULL);
+  int64_t seed_ = abs(((s * 181) * ((pid - 83) * 359)) % 104729);
+  return seed_;
+}*/
+
+
 
 
 class Csingleton{
 	// 单例模式
 private:
 	Csingleton();
-	cublasHandle_t cublas_handle;
+	cublasHandle_t cublas_handle_;
 	static shared_ptr<Csingleton> csingleton;
-	static shared_ptr<mt19937> rng;
+	static shared_ptr<mt19937> rng_;
 public:
 	~Csingleton();
 	static Csingleton& Get(){
@@ -32,8 +53,15 @@ public:
 			return *csingleton;
 		}
 	}
-	inline static mt19937& rng();
-	inline static cublasHandle_t cublas_handle();
+	
+	inline static mt19937& rng(){
+		//int64_t seed_ = my_seed();
+		rng_.reset(new mt19937(1));
+		return *(Get().rng_);
+	}
+
+	inline static cublasHandle_t cublas_handle() { return Get().cublas_handle_; }
+	
 };
 
 // CUDA: thread number configuration.
@@ -57,3 +85,4 @@ inline int CAFFE_GET_BLOCKS(const int N) {
 
 
 #endif
+

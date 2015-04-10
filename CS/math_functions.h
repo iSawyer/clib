@@ -6,7 +6,7 @@
 #include "common.h"
 // TODO: add more math functions
 extern "C"{
-	#include <cblas.h>
+	#include "cblas.h"
 }
 template <typename T>
 void c_cpu_gemm(const CBLAS_TRANSPOSE TransA,
@@ -23,6 +23,8 @@ template <typename T>
 void c_cpu_axpy(const int N, const T alpha, const T* X,
     T* Y);
 
+template <typename T>
+void c_copy(const int N, const T* X, T* Y);
 
 
 template<typename T>
@@ -49,8 +51,8 @@ void c_gpu_gemv(const CBLAS_TRANSPOSE TransA, const int M, const int N,
     T* y);
 
 template <typename T>
-void c_gpu_axpy(const int N, const Dtype alpha, const Dtype* X,
-    Dtype* Y);
+void c_gpu_axpy(const int N, const T alpha, const T* X,
+    T* Y);
 
 #endif
 

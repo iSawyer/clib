@@ -1,36 +1,27 @@
 #include "common.h"
 #include <cstdio>
 #include <ctime>
+#include <boost/shared_ptr.hpp>
+#include <cublas_v2.h>
 
-
-int64_t seed(){
-  pid = getpid();
-  s = time(NULL);
-  seed = abs(((s * 181) * ((pid - 83) * 359)) % 104729);
-  return seed;
-}
-
-
-share_ptr<Csingleton> Csingleton:: csingleton;
-share_ptr<mt19937> Csingleton:: rng;
+shared_ptr<Csingleton> Csingleton:: csingleton;
+shared_ptr<mt19937> Csingleton:: rng_;
 
 Csingleton:: Csingleton(){
-	int64_t seed = seed();
-	rng = new(mt19937(seed));
-	cublasCreate(&cublas_handle);
+	//int64_t seed_ = seed();
+	// share_ptr features
+	//rng_ = new(mt19937(seed_));
+	//rng_.reset(new(mt19937(seed_)));
+	cublasCreate(&cublas_handle_);
 }
 
 Csingleton:: ~Csingleton(){
 	if(cublas_handle){
-		cublasDestroy(cublas_handle);
+		cublasDestroy(cublas_handle_);
 	}
 }
 
-static mt19937& Csingleton::rng(){
-	return *(Get().rng);
-}
 
-static cublasHandle_t Csingleton::cublas_handle() { return Get().cublas_handle; }
 
 
 

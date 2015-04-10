@@ -1,0 +1,1 @@
+g++    -c -o common.o common.cpp

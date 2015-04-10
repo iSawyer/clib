@@ -16,7 +16,7 @@ void c_gpu_gemm<float>(const CBLAS_TRANSPOSE TransA,
       (TransA == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
   cublasOperation_t cuTransB =
       (TransB == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
-  (cublasSgemm(C_singleton::cublas_handle(), cuTransB, cuTransA,
+  (cublasSgemm(Csingleton::cublas_handle(), cuTransB, cuTransA,
       N, M, K, &alpha, B, ldb, A, lda, &beta, C, N));
 }
 
@@ -32,7 +32,7 @@ void c_gpu_gemm<double>(const CBLAS_TRANSPOSE TransA,
       (TransA == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
   cublasOperation_t cuTransB =
       (TransB == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
-  (cublasDgemm(C_singleton::cublas_handle(), cuTransB, cuTransA,
+  (cublasDgemm(Csingleton::cublas_handle(), cuTransB, cuTransA,
       N, M, K, &alpha, B, ldb, A, lda, &beta, C, N));
 }
 
@@ -42,7 +42,7 @@ void c_gpu_gemv<float>(const CBLAS_TRANSPOSE TransA, const int M,
     const float beta, float* y) {
   cublasOperation_t cuTransA =
       (TransA == CblasNoTrans) ? CUBLAS_OP_T : CUBLAS_OP_N;
-  (cublasSgemv(C_singleton::cublas_handle(), cuTransA, N, M, &alpha,
+  (cublasSgemv(Csingleton::cublas_handle(), cuTransA, N, M, &alpha,
       A, N, x, 1, &beta, y, 1));
 }
 
@@ -52,18 +52,18 @@ void c_gpu_gemv<double>(const CBLAS_TRANSPOSE TransA, const int M,
     const double beta, double* y) {
   cublasOperation_t cuTransA =
       (TransA == CblasNoTrans) ? CUBLAS_OP_T : CUBLAS_OP_N;
-  (cublasDgemv(C_singleton::cublas_handle(), cuTransA, N, M, &alpha,
+  (cublasDgemv(Csingleton::cublas_handle(), cuTransA, N, M, &alpha,
       A, N, x, 1, &beta, y, 1));
 }
 
 template <>
 void c_gpu_axpy<float>(const int N, const float alpha, const float* X,
     float* Y) {
-  (cublasSaxpy(C_singleton::cublas_handle(), N, &alpha, X, 1, Y, 1));
+  (cublasSaxpy(Csingleton::cublas_handle(), N, &alpha, X, 1, Y, 1));
 }
 
 template <>
 void c_gpu_axpy<double>(const int N, const double alpha, const double* X,
     double* Y) {
-  (cublasDaxpy(C_singleton::cublas_handle(), N, &alpha, X, 1, Y, 1));
+  (cublasDaxpy(Csingleton::cublas_handle(), N, &alpha, X, 1, Y, 1));
 }
