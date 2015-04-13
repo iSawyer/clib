@@ -17,7 +17,7 @@ public:
 	Container(size_t num_, size_t h_, size_t w_);
 	
 	// no need to write delete function
-
+	
 	const T* cpu_data() const;
 	const T* gpu_data() const;
 	T* mutable_cpu_data();
@@ -27,7 +27,8 @@ public:
 		// TODO: check bound 
 		return (num_ * h + h_) * w + w_;
 	}
-
+	
+	Container(const Container& other);
 
 
 	/* inline function */
@@ -49,7 +50,13 @@ public:
 	}
 
 	void share_data(const Container& other);
-
+	//void copy_data(Container& to);
+	
+	// compute the L2 norm
+	T sumsq_data() const ;
+	
+	// scale data
+	void scale_data(T scale_factor);
 private:
 	size_t num_;
 	size_t h;
