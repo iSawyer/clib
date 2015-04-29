@@ -3,78 +3,123 @@
 #include "container.h"
 #include "common.h"
 #include "math_functions.h"
-
-/*Class Sovler with method*/
+#include <iostream> // for debug
+/*Class Sovle with method*/
 
 template <typename T>
 class Sovler{
 public:
-	Sovler(){;}
+	
 
-	Container<T>& linear_bg_cpu(const Container<T>&A, const Container<T>&y, Container<T>&x, T esp, T lambda, T tau, int iter_max, bool verbose = false);
-	Container<T>& linear_bg_gpu(const Container<T>&A, const Container<T>&y, Container<T>&x, T esp, T lambda, T tau, int iter_max, bool verbose = false);
-
+	static Container<T>& linear_bg_cpu(const Container<T>&A, const Container<T>&y, Container<T>&x, T esp, T lambda, T tau, int iter_max, bool verbose = false);
+	static Container<T>& linear_bg_gpu(const Container<T>&A, const Container<T>&y, Container<T>&x, T esp, T lambda, T tau, int iter_max, bool verbose = false);
+private:
+	Sovler(){}
+	
 };
 
-// xian xing bregman suanfa 
+// linear bregman algorithm 
 template<typename T>
-Container<T>& Sovler<T>:: linear_bg_cpu(const Container<T>& A, const Constainer<T>&y,Container<T>&x,T esp, T lambda, T tau, int iter_max, bool verbose = false){
+Container<T>& Sovler<T>:: linear_bg_cpu(const Container<T>& A, const Container<T>&y,Container<T>&x,T esp, T lambda, T tau, int iter_max, bool verbose){
 	// check
-	if(A.width() != x.height() || A.height() != y.height()){
+	if( (A.width() != x.height()) || (A.height() != y.height())){
 		fprintf(stderr,"dimension dismatch\n");
-		x = new Container<T>(A.num(),A.width(),y.width());
+		return x;
 	}
 	
 	
 	const T* A_raw = A.cpu_data();
 	const T* y_raw = y.cpu_data();
 	T* x_ptr = x.mutable_cpu_data();
-	Container<T> gd(A.num(),A.width(),y.width());
-	Container<T> v(A.num(),A.width(),y.width());
-	Container<T> v_err(A.num(),y.height(),y.width());
-	T* err_ptr = v_err.mutable_cpu_data();
+	Container<T> gd(A.num(),y.height(),y.width());
+	Container<T> v(A.num(),x.height(),x.width());
+	
 	T* gd_ptr = gd.mutable_cpu_data();
 	T* v_ptr = v.mutable_cpu_data();
 	T err = INT_MAX;
-	int  iter = 0;
-	/* 
-	 *  v_(k+1) = v_(k) + A.T(f - Au_(k))
-	 * 
-	 * 
-	 * 
-	*/
-	while(err > esp && iter < iter_max){
-		// A * u(k)
-		c_cpu_gemv(CblasNoTrans,A.height(),A.width(),T 1.0, A_raw, x_ptr, T 0.0, gd_ptr);
+	int iter = 0;
+	while( iter < iter_max){
 		
-		// compute err
-		c_copy(y.height()*y.width(),y_raw, err_ptr);
-		c_cpu_axpy(y.height(), T -1., gd_ptr,err_ptr);
-		err = v_err.sumsq_data();
+		// A * x
+		c_cpu_gemv(CblasNoTrans,A.height(),A.width(),(T) -1., A_raw, x_ptr, (T) 0., gd_ptr);
+		if(verbose){
+			std::cout<<"in linear bregman function\n";
+			std::cout<<"err:"<<err<<std::endl; 
+		}
+		// y + (-gd) 
+		c_cpu_axpy(gd.height(),(T) 1.,y_raw, gd_ptr);
 		
-		// y - gd ~ gd - y 
-		c_cpu_axpy(gd.height(), T -1.,y_raw, gd_ptr);
+		err = gd.sumsq_data();
+		if(verbose){
+			std::cout<<"err"<<err<<std::endl;
+		}
+		// v = v + AT * gd 
+		c_cpu_gemv(CblasTrans,A.height(),A.width(), (T) 1., A_raw, gd_ptr, (T) 1., v_ptr);
 		
-		// -AT * gd
-		c_cpu_gemv(CblasTrans,A.height(),A.width(),T -1., A_raw, T 0., gd_ptr);
-		
-		// v + gd
-		c_cpu_axpy(v.height(),T 1.,gd_ptr,v_ptr);
-		
-		// update v done ,  update u
 		// soft shrinkage
-		c_cpu_soft(v.height(),lambda,v_ptr, x_ptr);
+		c_cpu_soft(x.height(),lambda,v_ptr, x_ptr);
+		
 		
 		// repalce with Container's method
 		c_cpu_scalar(x.height(),tau,x_ptr);
 		
+		iter++;
+	}
+	return x;
+}
+
+template <typename T>
+Container<T>& Sovler<T>:: linear_bg_gpu(const Container<T>& A, const Container<T>&y,Container<T>&x,T esp, T lambda, T tau, int iter_max, bool verbose){
+	if( (A.width() != x.height()) || (A.height() != y.height())){
+		fprintf(stderr,"dimension dismatch\n");
+		return x;
 	}
 	
 	
-	//Cmalloc(&v, y.size());
+	const T* A_raw = A.gpu_data();
+	const T* y_raw = y.gpu_data();
+	T* x_ptr = x.mutable_gpu_data();
+	Container<T> gd(A.num(),y.height(),y.width());
+	Container<T> v(A.num(),x.height(),x.width());
 	
+	T* gd_ptr = gd.mutable_gpu_data();
+	T* v_ptr = v.mutable_gpu_data();
+	T err = INT_MAX;
+	int iter = 0;
+	while( iter < iter_max){
+		
+		// A * x
+		c_gpu_gemv(CblasNoTrans,A.height(),A.width(),(T) -1., A_raw, x_ptr, (T) 0., gd_ptr);
+		if(verbose){
+			std::cout<<"in linear bregman function\n";
+			std::cout<<"err:"<<err<<std::endl; 
+		}
+		// y + (-gd) 
+		c_gpu_axpy(gd.height(),(T) 1.,y_raw, gd_ptr);
+		
+		err = gd.sumsq_data();
+		std::cout<<err<<std::endl;
+		if(verbose){
+			std::cout<<"err"<<err<<std::endl;
+		}
+		// v = v + AT * gd 
+		c_gpu_gemv(CblasTrans,A.height(),A.width(), (T) 1., A_raw, gd_ptr, (T) 1., v_ptr);
+		
+		// soft shrinkage
+		c_gpu_soft(x.height(),lambda,v_ptr, x_ptr);
+		
+		
+		// repalce with Container's method
+		c_gpu_scalar(x.height(),tau,x_ptr);
+		
+		iter++;
+	}
 	return x;
 }
+
+
+
+
 
 
 

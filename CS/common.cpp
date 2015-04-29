@@ -3,7 +3,7 @@
 #include <ctime>
 #include <boost/shared_ptr.hpp>
 #include <cublas_v2.h>
-
+#include <iostream>
 shared_ptr<Csingleton> Csingleton:: csingleton;
 shared_ptr<mt19937> Csingleton:: rng_;
 
@@ -12,7 +12,13 @@ Csingleton:: Csingleton(){
 	// share_ptr features
 	//rng_ = new(mt19937(seed_));
 	//rng_.reset(new(mt19937(seed_)));
-	cublasCreate(&cublas_handle_);
+	cublasStatus_t stat;
+	cublasHandle_t h;
+	stat = cublasCreate_v2(&cublas_handle_);
+    if (stat != CUBLAS_STATUS_SUCCESS) {
+        printf ("CUBLAS initialization failed\n");
+        exit(0);
+    }
 }
 
 Csingleton:: ~Csingleton(){

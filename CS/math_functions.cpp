@@ -40,13 +40,6 @@ void c_cpu_gemv<double>(const CBLAS_TRANSPOSE TransA, const int M,
   cblas_dgemv(CblasRowMajor, TransA, M, N, alpha, A, N, x, 1, beta, y, 1);
 }
 
-template <>
-void c_cpu_axpy<float>(const int N, const float alpha, const float* X,
-    float* Y) { cblas_saxpy(N, alpha, X, 1, Y, 1); }
-
-template <>
-void c_cpu_axpy<double>(const int N, const double alpha, const double* X,
-    double* Y) { cblas_daxpy(N, alpha, X, 1, Y, 1); }
 
 template <>
 void c_cpu_axpy<float>(const int N, const float alpha, const float* X,
@@ -61,14 +54,27 @@ void c_cpu_axpy<double>(const int N, const double alpha, const double* X,
 template<typename T>
 void c_cpu_soft(const int N, const T lambda, const T* X, T* Y){
 	for(int i = 0; i < N; i++){
-		Y[i] = abs(X[i]) > lambda ? (X[i] - lambda) : (0);  
+		if(abs(X[i]) > lambda){
+			if(X[i] > 0){
+				Y[i] = X[i] - lambda;
+			}
+			else
+				Y[i] = X[i] + lambda;
+		}
+		else
+			Y[i] = 0;
 	}
 }
 
-template<>
+template
+void c_cpu_soft<unsigned int>(const int N, const unsigned int lambda, const unsigned int* X, unsigned int* Y);
+template
+void c_cpu_soft<int>(const int N, const int lambda, const int* X, int* Y);
+
+template
 void c_cpu_soft<float>(const int N, const float lambda,const float* X, float* Y);
 
-template<>
+template
 void c_cpu_soft<double>(const int N, const double lambda, const double* X, double* Y); 
 
 template<typename T>
@@ -77,6 +83,12 @@ void c_cpu_scalar(const int N, const T alpha, T* X){
 		X[i] = alpha * X[i];
 	}
 }
+
+
+template
+void c_cpu_scalar<unsigned int>(const int N, const unsigned int alpha, unsigned int* X);
+template
+void c_cpu_scalar<int>(const int N, const int alpha, int*X);
 template
 void c_cpu_scalar<float>(const int N, const float alpha, float* X);
 template
@@ -85,12 +97,20 @@ void c_cpu_scalar<double>(const int N, const double alpha, double* X);
 
 template<>
 float c_cpu_dot<float>(const int N, const float* X, const float* Y){
-	return cblas_sdot(N, x, 1, y, 1);
+	return cblas_sdot(N, X, 1, Y, 1);
 }
 
 template<>
 double c_cpu_dot<double>(const int N, const double* X, const double* Y){
-	return cblas_ddot(n, x, 1, y, 1);
+	return cblas_ddot(N, X, 1, Y, 1);
+}
+template<>
+int c_cpu_dot<int>(const int N, const int* X, const int* Y){
+	//return cblas_ddot(N, X, 1, Y, 1);
+}
+template<>
+unsigned int c_cpu_dot<unsigned int>(const int N, const unsigned int* X, const unsigned int* Y){
+	//return cblas_ddot(N, X, 1, Y, 1);
 }
 
 template <typename T>
@@ -121,19 +141,10 @@ void c_copy(const int N, const T* X, T* Y){
 }
 
 template
-void c_copy<float>(const int N, const float* X, float* Y){
-	if(X != Y){
-		cudaMemcpy(Y,X,sizeof(float)*N,cudaMemcpyDefault);
-	}
-}
-
+void c_copy<float>(const int N, const float* X, float* Y);
 
 template
-void c_copy<double>(const int N, const double* X, double* Y){
-	if(X != Y){
-		cudaMemcpy(Y,X,sizeof(double)*N,cudaMemcpyDefault);
-	}
-}
+void c_copy<double>(const int N, const double* X, double* Y);
 
 template
 void c_copy<int>(const int N, const int* X, int* Y);
@@ -157,4 +168,4 @@ template
 void c_cpu_set<double>(const int N, const double alpha, double* X);
 
 template
-void c_cpu_set<int>(const int N, const double alpha, int* X);
+void c_cpu_set<int>(const int N, const int alpha, int* X);

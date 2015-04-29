@@ -2,14 +2,14 @@
 #include "cmemory.h"
 #include "common.h"
 #include "math_functions.h"
-
+#include <fstream>
 // xu yao zai zui hou shi li hua mo ban
-
+#include <boost/shared_ptr.hpp>
+#include <string>
 template <typename T>
 Container<T>:: Container(size_t num_, size_t h_, size_t w_): num_(num_), h(h_), w(w_), size_(num_*h_*w_){
 		// TODO:: check bound		
 		memory_ptr.reset(new Cmemory(size_*sizeof(T)));
-		
 }
 
 
@@ -55,15 +55,12 @@ T Container<T>:: sumsq_data() const{
 	switch (memory_ptr->head()) {
 		case Cmemory::HEAD_AT_CPU:
 			data = cpu_data();
-			sumsq = c_cpu_dot(count_, data, data);
+			sumsq = c_cpu_dot(size_, data, data);
 			break;
 		case Cmemory::HEAD_AT_GPU:
 		case Cmemory::SYNCED:
-			/*
 			data = gpu_data();
-			c_gpu_dot(count_, data, data, &sumsq);
-			*/
-			printf("not implement\n");
+			sumsq = c_gpu_dot(size_, data, data);
 			break;
 		case Cmemory::UNINITIALIZED:
 			return 0;
@@ -78,7 +75,7 @@ void Container<T>:: scale_data(T scale_factor){
 	if(!memory_ptr){
 		return;
 	}
-	T * data;
+	T* data;
 	switch(memory_ptr->head()){
 		case Cmemory:: HEAD_AT_CPU:
 			data = mutable_cpu_data();
@@ -86,27 +83,33 @@ void Container<T>:: scale_data(T scale_factor){
 			return;
 		case Cmemory:: HEAD_AT_GPU:
 		case Cmemory:: SYNCED:
-			printf("not implement\n");
+			data = mutable_gpu_data();
+			c_gpu_scalar(size_,scale_factor,data);
 			break;
 		case Cmemory:: UNINITIALIZED:
 			printf("UNINITIALIZED\n");
 			return;
-		default:
+		default:	
 			;
 	}
 }
 
-
-// deep copy
 template<typename T>
-Container<T>:: Container(const Container& other){
-	if(other.data() != this->memory_ptr){
-		this = new(other.num(),other.height(),other.width());
-		void* des = this->memory_ptr->mutable_cpu_data();
-		void* src = other.data()->mutable_cpu_data();
-		memcpy(des,src,this->size());
-		
+void Container<T>:: Log_data(){
+	const T* ptr = this->cpu_data();
+	for(int i = 0; i < this->size();i++){
+		std::cout<<ptr[i]<<" ";
+	} 
+}
+
+template<typename T>
+void Container<T>:: read_from_text(const char* path){
+	T* ptr = mutable_cpu_data();
+	std::fstream in(path);
+	for(int i = 0; i < size(); i++){
+		in>>ptr[i];
 	}
+	in.close();
 }
 
 

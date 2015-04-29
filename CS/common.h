@@ -4,6 +4,7 @@
 */
 #ifndef COMMON_H_
 #define COMMON_H_
+
 #include <boost/shared_ptr.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int.hpp>
@@ -18,6 +19,8 @@
 #include <cuda_runtime.h>
 #include <curand.h>
 #include <driver_types.h>  // cuda driver types
+#include <ostream>
+
 //using namespace std;
 typedef boost::mt19937 mt19937;
 using boost::shared_ptr;
@@ -31,8 +34,6 @@ int64_t my_seed(){
   int64_t seed_ = abs(((s * 181) * ((pid - 83) * 359)) % 104729);
   return seed_;
 }*/
-
-
 
 
 class Csingleton{
@@ -68,13 +69,13 @@ public:
 // Use 1024 threads per block, which requires cuda sm_2x or above,
 // or fall back to attempt compatibility (best of luck to you).
 #if __CUDA_ARCH__ >= 200
-    const int CAFFE_CUDA_NUM_THREADS = 1024;
+    const int C_CUDA_NUM_THREADS = 1024;
 #else
-    const int CAFFE_CUDA_NUM_THREADS = 512;
+    const int C_CUDA_NUM_THREADS = 512;
 #endif
 
-inline int CAFFE_GET_BLOCKS(const int N) {
-  return (N + CAFFE_CUDA_NUM_THREADS - 1) / CAFFE_CUDA_NUM_THREADS;
+inline int C_GET_BLOCKS(const int N) {
+  return (N + C_CUDA_NUM_THREADS - 1) / C_CUDA_NUM_THREADS;
 }
 
 // CUDA: grid stride looping

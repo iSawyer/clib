@@ -28,7 +28,9 @@ int main(){
     for(int i = 0; i < h*num*w;i++){
 		std::cout<<ptr[i]<<" ";
 	}
-	//c_rng_gaussian(h*num*w,0,1,ptr);
+	std::cout<<"end"<<std::endl;
+	float* gpu_ptr = test->mutable_gpu_data();
+	
 	
 	
 	std::cout<<std::endl;

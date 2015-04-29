@@ -40,7 +40,7 @@ void c_cpu_soft(const int N, const T lambda, const T* X, T* Y);
 
 // X = alpha * X
 template <typename T>
-void c_cpu_scalar(const in N, const T alpha,T* X);
+void c_cpu_scalar(const int N, const T alpha,T* X);
 
 // L2-norm
 template <typename T>
@@ -74,7 +74,14 @@ void c_gpu_axpy(const int N, const T alpha, const T* X,
     T* Y);
 
 template<typename T>
-void c_gpu_soft(const int N, const T lambda, const T* X);
+void c_gpu_soft(const int N, const T lambda, const T* X,  T* Y);
+
+template<typename T>
+T c_gpu_dot(const int N, const T* X, const T* Y);
+
+template<typename T>
+void c_gpu_scalar(const int N, const T alpha, T* X); 
+
 
 
 #endif
